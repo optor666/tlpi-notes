@@ -1,6 +1,5 @@
 Downloads/812fa92405f19d7333cfbdccd53d724b.pdf
-P1334 -> 非标准模式
-1. 使用 Java、Python、C 写一个程序，测试非标准模式
+P1356
 
 # 终端
 ## 概念
@@ -22,6 +21,39 @@ P1334 -> 非标准模式
 1. 实时读取。使用这种模式的程序有：vi、more、less
 2. 在非标准模式下，终端驱动通常不会解释特殊字符。
 
+# 相关 API
+``` C
+#include <termios.h>
+
+int tcgetattr(int fd, struct termios *termios_p);
+int tcsetattr(int fd, int optional_actions, const struct termios *termios_p);
+    // Both return 0 on success, or -1 on error.
+
+/*
+ * optional_actions 取值如下：
+ *  TCSANOW: The change is carried out immediately.
+ *  TCSADRAIN: The change takes effect after all currently queued output has been 
+ *      transmitted to the terminal.
+ *  TCSAFLUSH: The change takes effect as for TCSADRAIN, but, int addition, any 
+ *      input that is still pending at the time the change takes effect is 
+ *      discarded.
+ */
+
+struct termios {
+    tcflag_t c_iflag; // Input flags
+    tcflag_t c_oflag; // Output flags
+    tcflag_t c_cflag; // Control flags, relating to hardware control of the terminal line
+    tcflag_t c_lflag; // Local modes, controlling the user interface for terminal input
+    cc_t c_line; // Line discipline (nonstandard)
+    cc_t c_cc[NCCS]; // Terminal special characters 
+    speed_t c_ispeed; // Input speed (nonstandard; unused)
+    speed_t c_ospeed; // Output speed (nonstandard; unused)
+}
+```
+
+# 相关 Shell 命令
+1. stty
+
 # 关联章节
 1. 64. Pseudoterminals P1419
 
@@ -29,6 +61,7 @@ P1334 -> 非标准模式
 1. vi
 2. more
 3. less
+4. telnet
 
 # 参考书籍
 1. Strang, J. 1986. Programming with Curses. O’Reilly, Sebastopol, California.
