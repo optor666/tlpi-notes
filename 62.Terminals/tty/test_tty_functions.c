@@ -13,7 +13,7 @@ static struct termios userTermios;
 
 // General handler: restore tty settings and exit
 static void handler(int sig) {
-    if (tcsetattr(sTDIN_FILENO, SCSAFLUSH, &userTermios) == -1)
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &userTermios) == -1)
         errExit("tcsetattr");
     _exit(EXIT_SUCCESS);
 }
@@ -82,9 +82,64 @@ int main(int argc, char *argv[]) {
     if (argc > 1) { // Use cbreak mode
         if (ttySetCbreak(STDIN_FILENO, &userTermios) == -1)
             errExit("ttySetCbreak");
+
+        /* Terminal special characters can generate signals in cbreak
+         * mode. Catch them so that we can adjust the terminal mode.
+         * We establish handlers only if the signals are not being ignored. */
+
+        sa.sa_handler = handler;
+
+        if (sigaction(SIGQUIT, NULL, &prev) == -1)
+            errExit("sigaction");
+        if (prev.sa_handler != SIG_IGN)
+            if (sigaction(SIGQUIT, &sa, NULL) == -1)
+                errExit("sigaction");
+
+        if (sigaction(SIGINT, NULL, &prev) == -1)
+            errExit("sigaction");
+        if (prev.sa_handler != SIG_IGN) 
+            if (sigaction(SIGINT, &sa, NULL) == -1)
+                errExit("sigaction");
+
+        sa.sa_handler = tstpHandler;
+
+        if (sigaction(SIGTSTP, NULL, &prev) == -1)
+            errExit("sigaction");
+        if (prev.sa_handler != SIG_IGN) 
+            if (sigaction(SIGTSTP, &sa, NULL) == -1)
+                errExit("sigaction");
     } else { // Use raw mode
         if (ttySetRaw(STDIN_FILENO, &userTermios) == -1)
             errExit("ttySetRaw");
+    }
+
+    sa.sa_handler = handler;
+    if (sigaction(SIGTERM, &sa, NULL) == -1)
+        errExit("sigaction");
+
+    setbuf(stdout, NULL); /* Disable stdout buffering */
+
+    for (;;) { /* Read and echo stdin */
+        n = read(STDIN_FILENO, &ch, 1);
+        if (n == -1) {
+            errMsg("read");
+            break;
+        }
+
+        if (n == 0) /* Can occur after terminal disconnect */
+            break;
+
+        if (isalpha((unsigned char) ch)) /* Letters --> lowercase */
+            putchar(tolower((unsigned char) ch));
+        else if (ch == '\n' || ch == '\r')
+            putchar(ch);
+        else if (iscntrl((unsigned char) ch))
+            printf("^%c", ch ^ 64); /* Echo Control-A as ^A, etc. */
+        else 
+            putchar('*'); /* All other chars as '*' */
+
+        if (ch == 'q') /* Quit loop */
+            break;
     }
 
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &userTermios) == -1)
