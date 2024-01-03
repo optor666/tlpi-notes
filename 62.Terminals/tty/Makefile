@@ -18,5 +18,14 @@ demo_SIGWINCH: demo_SIGWINCH.c
 exercises62-1: exercises62-1.c
 	gcc -o exercises62-1 exercises62-1.c
 
+exercises62-2: exercises62-2.c
+	gcc -o exercises62-2 exercises62-2.c
+
+exercises62-3: exercises62-3.c
+	gcc -o exercises62-3 exercises62-3.c
+
+exercises62-4: exercises62-4.c
+	gcc -o exercises62-4 exercises62-4.c
+
 clean: 
 	rm -f new_intr no_echo test_partial_read test_tty_functions demo_SIGWINCH exercises62-1
