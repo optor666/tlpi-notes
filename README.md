@@ -1,5 +1,4 @@
 1. 阅读以下代码：
-https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v2.35/ -> more
 https://github.com/gnachman/iTerm2
 
 Page 1422
