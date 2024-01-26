@@ -1,5 +1,4 @@
 1. 阅读以下代码：
-https://github.com/gnachman/iTerm2
 
 Page 1422
 
